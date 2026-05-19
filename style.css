@@ -653,9 +653,11 @@ a.btn-donate:hover {
 
 .prompt-modal {
     position: fixed;
-    inset: 0;
-    background: rgba(26, 14, 6, 0.7);
-    backdrop-filter: blur(3px);
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(26, 14, 6, 0.75);
     display: flex;
     align-items: center;
     justify-content: center;
