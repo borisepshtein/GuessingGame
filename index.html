@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Who Am I? — The Guessing Game</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1 class="title">Who Am I?</h1>
+            <p class="subtitle">The Guessing Game</p>
+        </header>
+
+        <!-- Screen 1: Welcome -->
+        <div id="screen-welcome" class="screen">
+            <p class="prompt">Enter your name to begin</p>
+            <input type="text" id="input-username" class="text-input" autocomplete="off" placeholder="Your name" />
+            <button id="btn-play" class="btn btn-primary">Play</button>
+            <button id="btn-view-leaderboard" class="btn btn-secondary">Leaderboard</button>
+        </div>
+
+        <!-- Screen 2: Setup -->
+        <div id="screen-setup" class="screen">
+            <p class="prompt">Who should I think of?</p>
+            <div class="choice-grid choice-grid-3" id="category-grid">
+                <button class="choice-btn" data-cat="historical">Historical Figure</button>
+                <button class="choice-btn" data-cat="literary">Literary Character</button>
+                <button class="choice-btn" data-cat="both">Either</button>
+            </div>
+            <div id="filter-panels" class="filter-panels hidden">
+                <div class="filter-section">
+                    <p class="filter-label">Continent</p>
+                    <div class="filter-grid" id="continent-grid">
+                        <button class="filter-btn" data-val="Europe">Europe</button>
+                        <button class="filter-btn" data-val="North America">North America</button>
+                        <button class="filter-btn" data-val="South America">South America</button>
+                        <button class="filter-btn" data-val="Asia">Asia</button>
+                        <button class="filter-btn" data-val="Africa">Africa</button>
+                        <button class="filter-btn" data-val="Middle East">Middle East</button>
+                        <button class="filter-btn" data-val="Australia/Oceania">Australia / Oceania</button>
+                    </div>
+                </div>
+                <div class="filter-section">
+                    <p class="filter-label">Time Period</p>
+                    <div class="filter-grid" id="period-grid">
+                        <button class="filter-btn" data-val="Antiquity">Antiquity</button>
+                        <button class="filter-btn" data-val="Medieval">Medieval</button>
+                        <button class="filter-btn" data-val="Renaissance">Renaissance</button>
+                        <button class="filter-btn" data-val="Era of Enlightenment">Enlightenment</button>
+                        <button class="filter-btn" data-val="Modern Times">Modern Times</button>
+                    </div>
+                </div>
+                <p class="filter-note">No selection = any continent / any period</p>
+            </div>
+            <button id="btn-start-game" class="btn btn-primary">Start Game</button>
+            <button id="btn-setup-back" class="btn btn-secondary">Back</button>
+        </div>
+
+        <!-- Screen 3: Game -->
+        <div id="screen-game" class="screen">
+            <div class="game-header">
+                <p id="game-hint" class="hint-text"></p>
+                <span id="question-counter" class="counter">Questions asked: 0</span>
+            </div>
+            <div id="chat-log" class="chat-log"></div>
+            <div class="question-input-row">
+                <input type="text" id="input-question" class="text-input" placeholder="Ask a yes/no question..." autocomplete="off" />
+                <button id="btn-ask" class="btn btn-primary">Ask</button>
+            </div>
+            <div class="game-actions">
+                <button id="btn-make-guess" class="btn btn-secondary">Make a Guess</button>
+                <button id="btn-give-up" class="btn btn-danger">Give Up</button>
+            </div>
+        </div>
+
+        <!-- Screen 4: Guess -->
+        <div id="screen-guess" class="screen">
+            <p class="prompt">Who do you think I am?</p>
+            <input type="text" id="input-guess" class="text-input" placeholder="Enter your guess..." autocomplete="off" />
+            <p id="guess-feedback" class="guess-feedback hidden"></p>
+            <div class="btn-row">
+                <button id="btn-submit-guess" class="btn btn-primary">Submit Guess</button>
+                <button id="btn-cancel-guess" class="btn btn-secondary">Back to Game</button>
+            </div>
+        </div>
+
+        <!-- Screen 5: Result -->
+        <div id="screen-result" class="screen">
+            <div id="result-box" class="result-box">
+                <div id="result-icon" class="result-icon"></div>
+                <p id="result-message" class="result-message"></p>
+            </div>
+            <button id="btn-play-again" class="btn btn-primary">Play Again</button>
+            <button id="btn-go-leaderboard" class="btn btn-secondary">Leaderboard</button>
+        </div>
+
+        <!-- Screen 6: Leaderboard -->
+        <div id="screen-leaderboard" class="screen">
+            <p class="prompt">Leaderboard</p>
+            <p class="leaderboard-sub">Ranked by fewest questions to win</p>
+            <table id="leaderboard-table" class="lb-table">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Player</th>
+                        <th>Best Game</th>
+                        <th>Wins</th>
+                    </tr>
+                </thead>
+                <tbody id="leaderboard-body"></tbody>
+            </table>
+            <button id="btn-lb-back" class="btn btn-secondary">Play Again</button>
+        </div>
+    </div>
+
+    <!-- Loading overlay -->
+    <div id="loading" class="loading hidden">
+        <div class="loading-spinner">?</div>
+        <div class="loading-text" id="loading-text">Thinking...</div>
+        <div class="loading-dots">
+            <span></span><span></span><span></span>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

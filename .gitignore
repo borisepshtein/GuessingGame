@@ -1,0 +1,6 @@
+.env
+.env.local
+node_modules
+.DS_Store
+.claude
+games.db
