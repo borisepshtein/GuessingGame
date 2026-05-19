@@ -216,6 +216,22 @@ header::after {
     color: var(--red);
 }
 
+.btn-donate {
+    background: transparent;
+    color: var(--text-dim);
+    border: 1px dashed var(--border);
+    font-style: italic;
+    font-size: 0.85rem;
+    text-decoration: none;
+    display: inline-block;
+}
+
+.btn-donate:hover {
+    border-color: var(--gold);
+    color: var(--gold);
+    transform: translateY(-1px);
+}
+
 /* ─── Category grid ───────────────────────────────────── */
 .choice-grid {
     display: grid;
