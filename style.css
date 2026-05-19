@@ -642,7 +642,7 @@ a.btn-donate:hover {
     font-size: 1rem;
     padding: 4px 6px;
     cursor: pointer;
-    opacity: 0.15;
+    opacity: 0;
     transition: opacity 0.2s;
     line-height: 1;
 }
