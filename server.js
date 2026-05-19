@@ -30,13 +30,17 @@ const updateCount  = db.prepare(`UPDATE games SET question_count = @count, conve
 const updateStatus = db.prepare(`UPDATE games SET status = @status, player_guess = @guess WHERE id = @id`);
 const setGaveUp    = db.prepare(`UPDATE games SET status = 'gave-up' WHERE id = ?`);
 
+const getPlayedCharacters = db.prepare(`SELECT character FROM games WHERE username = ? AND character IS NOT NULL AND character != ''`);
+
 // POST /api/start-game
 app.post('/api/start-game', async (req, res) => {
-    const { username, category, continents = [], periods = [], playedCharacters = [] } = req.body;
+    const { username, category, continents = [], periods = [] } = req.body;
 
     if (!username || !category) {
         return res.status(400).json({ error: 'Missing required fields' });
     }
+
+    const played = getPlayedCharacters.all(username).map(r => r.character);
 
     const { template, categoryInstructions, filterTemplates } = prompts.startGameSystemPrompt;
     const categoryInstruction = categoryInstructions[category] ?? categoryInstructions.any;
@@ -50,7 +54,7 @@ app.post('/api/start-game', async (req, res) => {
     const systemPrompt = template
         .replace('{categoryInstruction}', categoryInstruction)
         .replace('{filterLines}', filterLines)
-        .replace('{playedList}', playedCharacters.length > 0 ? playedCharacters.join(', ') : 'none');
+        .replace('{playedList}', played.length > 0 ? played.join(', ') : 'none');
 
     try {
         const claudeRes = await fetch('https://api.anthropic.com/v1/messages', {
