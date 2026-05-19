@@ -216,7 +216,9 @@ header::after {
     color: var(--red);
 }
 
-.btn-donate {
+a.btn-donate,
+a.btn-donate:link,
+a.btn-donate:visited {
     font-family: var(--font-body);
     font-style: italic;
     font-size: 0.85rem;
@@ -228,7 +230,7 @@ header::after {
     letter-spacing: 0.3px;
 }
 
-.btn-donate:hover {
+a.btn-donate:hover {
     color: var(--gold);
     border-bottom-color: var(--gold);
 }
