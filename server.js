@@ -2,6 +2,7 @@ require('dotenv').config();
 const express = require('express');
 const path = require('path');
 const Database = require('better-sqlite3');
+const prompts = require('./netlify/functions/prompts.json');
 
 const app = express();
 app.use(express.json());
@@ -23,11 +24,11 @@ db.exec(`
     )
 `);
 
-const insertGame    = db.prepare(`INSERT INTO games (username, character, category, filters, status, question_count, player_guess, timestamp) VALUES (@username, @character, @category, @filters, 'in-progress', 0, '', @timestamp)`);
-const getGame       = db.prepare(`SELECT * FROM games WHERE id = ?`);
-const updateCount   = db.prepare(`UPDATE games SET question_count = @count, conversation = @conversation WHERE id = @id`);
-const updateStatus  = db.prepare(`UPDATE games SET status = @status, player_guess = @guess WHERE id = @id`);
-const setGaveUp     = db.prepare(`UPDATE games SET status = 'gave-up' WHERE id = ?`);
+const insertGame   = db.prepare(`INSERT INTO games (username, character, category, filters, status, question_count, player_guess, timestamp) VALUES (@username, @character, @category, @filters, 'in-progress', 0, '', @timestamp)`);
+const getGame      = db.prepare(`SELECT * FROM games WHERE id = ?`);
+const updateCount  = db.prepare(`UPDATE games SET question_count = @count, conversation = @conversation WHERE id = @id`);
+const updateStatus = db.prepare(`UPDATE games SET status = @status, player_guess = @guess WHERE id = @id`);
+const setGaveUp    = db.prepare(`UPDATE games SET status = 'gave-up' WHERE id = ?`);
 
 // POST /api/start-game
 app.post('/api/start-game', async (req, res) => {
@@ -37,31 +38,19 @@ app.post('/api/start-game', async (req, res) => {
         return res.status(400).json({ error: 'Missing required fields' });
     }
 
-    let categoryInstruction;
-    if (category === 'historical') {
-        categoryInstruction = 'Think of a real historical figure (not a fictional character).';
-    } else if (category === 'literary') {
-        categoryInstruction = 'Think of a well-known fictional literary character from a novel, play, or poem (not a real person).';
-    } else {
-        categoryInstruction = 'Think of either a real historical figure OR a well-known fictional literary character — your choice.';
-    }
+    const { template, categoryInstructions, filterTemplates } = prompts.startGameSystemPrompt;
+    const categoryInstruction = categoryInstructions[category] ?? categoryInstructions.any;
 
     let filterLines = '';
     if (category !== 'literary') {
-        if (continents.length > 0) filterLines += `\n- The historical figure must be from one of these regions: ${continents.join(', ')}.`;
-        if (periods.length > 0)    filterLines += `\n- The historical figure must have lived primarily during: ${periods.join(', ')}.`;
+        if (continents.length > 0) filterLines += `\n- ${filterTemplates.continents.replace('{values}', continents.join(', '))}`;
+        if (periods.length > 0)    filterLines += `\n- ${filterTemplates.periods.replace('{values}', periods.join(', '))}`;
     }
 
-    const playedList = playedCharacters.length > 0 ? playedCharacters.join(', ') : 'none';
-
-    const systemPrompt = `You are the game master for a "Who Am I?" guessing game.
-Pick ONE character for the player to guess. Rules:
-- ${categoryInstruction}${filterLines}
-- Do NOT pick any of these already-played characters: ${playedList}
-- Pick someone a reasonably educated adult would recognize.
-Respond ONLY with valid JSON, no markdown fences, no commentary:
-{"character": "Full Name", "hint": "Short descriptive label, e.g. 'Ancient Greek philosopher' or 'protagonist of a Victorian novel'"}
-The hint must NOT contain the character's name and must not immediately give the answer away.`;
+    const systemPrompt = template
+        .replace('{categoryInstruction}', categoryInstruction)
+        .replace('{filterLines}', filterLines)
+        .replace('{playedList}', playedCharacters.length > 0 ? playedCharacters.join(', ') : 'none');
 
     try {
         const claudeRes = await fetch('https://api.anthropic.com/v1/messages', {
@@ -85,8 +74,7 @@ The hint must NOT contain the character's name and must not immediately give the
         }
 
         const claudeData = await claudeRes.json();
-        const rawText = claudeData.content?.[0]?.text ?? '';
-        const parsed = extractJSON(rawText);
+        const parsed = extractJSON(claudeData.content?.[0]?.text ?? '');
         const { character, hint } = parsed;
 
         if (!character || !hint) {
@@ -117,18 +105,12 @@ app.post('/api/ask', async (req, res) => {
     const record = getGame.get(gameId);
     if (!record) return res.status(404).json({ error: 'Game not found' });
 
-    const character = record.character;
     const questionNumber = record.question_count + 1;
-
-    const { askSystemPrompt } = require('./netlify/functions/prompts.json');
-    const systemPrompt = askSystemPrompt
-        .replace('{character}', character)
+    const systemPrompt = prompts.askSystemPrompt
+        .replace('{character}', record.character)
         .replace('{questionNumber}', questionNumber);
 
-    const messages = [
-        ...conversationHistory.slice(-20),
-        { role: 'user', content: question }
-    ];
+    const messages = [...conversationHistory.slice(-20), { role: 'user', content: question }];
 
     try {
         const claudeRes = await fetch('https://api.anthropic.com/v1/messages', {
@@ -181,20 +163,9 @@ app.post('/api/guess', async (req, res) => {
     const record = getGame.get(gameId);
     if (!record) return res.status(404).json({ error: 'Game not found' });
 
-    const character = record.character;
-
-    const systemPrompt = `You are validating a guess in a "Who Am I?" guessing game.
-The correct answer is: ${character}
-The player guessed: ${guess}
-
-Rules for accepting a guess as correct:
-- Accept the full name or the most commonly used name (e.g., "Einstein" for "Albert Einstein").
-- Accept common alternate names, pen names, stage names, or historical name variants.
-- Accept reasonable spelling variations and transliterations.
-- Reject if the guess refers to a clearly different person or character.
-
-Respond ONLY with valid JSON, no markdown fences, no commentary:
-{"correct": true, "message": "Yes! You got it!"} or {"correct": false, "message": "Not quite — keep trying!"}`;
+    const systemPrompt = prompts.guessSystemPrompt
+        .replace('{character}', record.character)
+        .replace('{guess}', guess);
 
     try {
         const claudeRes = await fetch('https://api.anthropic.com/v1/messages', {
@@ -223,7 +194,7 @@ Respond ONLY with valid JSON, no markdown fences, no commentary:
 
         if (correct) {
             updateStatus.run({ status: 'won', guess, id: gameId });
-            return res.json({ correct: true, message, character });
+            return res.json({ correct: true, message, character: record.character });
         }
 
         res.json({ correct: false, message });
