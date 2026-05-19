@@ -62,6 +62,7 @@
 
         <!-- Screen 3: Game -->
         <div id="screen-game" class="screen">
+            <button id="btn-prompt-editor" class="btn-secret" title="Edit prompt">✎</button>
             <div class="game-header">
                 <p id="game-hint" class="hint-text"></p>
                 <span id="question-counter" class="counter">Questions asked: 0</span>
@@ -115,6 +116,19 @@
                 <tbody id="leaderboard-body"></tbody>
             </table>
             <button id="btn-lb-back" class="btn btn-secondary">Play Again</button>
+        </div>
+    </div>
+
+    <!-- Prompt editor modal -->
+    <div id="prompt-modal" class="prompt-modal hidden">
+        <div class="prompt-modal-box">
+            <p class="prompt-modal-label">Overwrite the Prompt</p>
+            <textarea id="prompt-textarea" class="prompt-textarea"></textarea>
+            <div class="prompt-modal-actions">
+                <button id="btn-prompt-save" class="btn btn-primary">Save</button>
+                <button id="btn-prompt-cancel" class="btn btn-secondary">Cancel</button>
+                <button id="btn-prompt-reset" class="btn btn-danger">Reset to Default</button>
+            </div>
         </div>
     </div>
 

@@ -100,7 +100,7 @@ app.post('/api/start-game', async (req, res) => {
 
 // POST /api/ask
 app.post('/api/ask', async (req, res) => {
-    const { gameId, question, conversationHistory = [] } = req.body;
+    const { gameId, question, conversationHistory = [], customPrompt } = req.body;
 
     if (!gameId || !question) {
         return res.status(400).json({ error: 'Missing required fields' });
@@ -110,7 +110,8 @@ app.post('/api/ask', async (req, res) => {
     if (!record) return res.status(404).json({ error: 'Game not found' });
 
     const questionNumber = record.question_count + 1;
-    const systemPrompt = prompts.askSystemPrompt
+    const basePrompt = customPrompt || prompts.askSystemPrompt;
+    const systemPrompt = basePrompt
         .replace('{character}', record.character)
         .replace('{questionNumber}', questionNumber);
 
@@ -219,6 +220,11 @@ app.post('/api/give-up', (req, res) => {
 
     setGaveUp.run(gameId);
     res.json({ character: record.character });
+});
+
+// GET /api/prompt
+app.get('/api/prompt', (req, res) => {
+    res.json({ prompt: prompts.askSystemPrompt });
 });
 
 // GET /api/leaderboard

@@ -8,6 +8,8 @@ const state = {
     questionCount: 0,
     conversationHistory: [],
     playedCharacters: [],
+    customPrompt: null,
+    defaultPrompt: null,
 };
 
 function showScreen(id) {
@@ -187,6 +189,7 @@ async function askQuestion() {
                 gameId: state.gameId,
                 question,
                 conversationHistory: state.conversationHistory,
+                customPrompt: state.customPrompt,
             })
         });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -265,6 +268,36 @@ async function submitGuess() {
         setLoading(false);
         submitBtn.disabled = false;
     }
+}
+
+// --- Prompt editor ---
+
+async function openPromptEditor() {
+    if (!state.defaultPrompt) {
+        try {
+            const res = await fetch('api/prompt');
+            const data = await res.json();
+            state.defaultPrompt = data.prompt;
+        } catch { return; }
+    }
+    document.getElementById('prompt-textarea').value = state.customPrompt ?? state.defaultPrompt;
+    document.getElementById('prompt-modal').classList.remove('hidden');
+}
+
+function closePromptModal() {
+    document.getElementById('prompt-modal').classList.add('hidden');
+}
+
+function savePromptOverride() {
+    const val = document.getElementById('prompt-textarea').value.trim();
+    state.customPrompt = val || null;
+    closePromptModal();
+}
+
+function resetPrompt() {
+    state.customPrompt = null;
+    document.getElementById('prompt-textarea').value = state.defaultPrompt ?? '';
+    closePromptModal();
 }
 
 // --- Result screen ---
@@ -346,6 +379,13 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('input-question').onkeydown = e => { if (e.key === 'Enter') askQuestion(); };
     document.getElementById('btn-make-guess').onclick = openGuessScreen;
     document.getElementById('btn-give-up').onclick = onGiveUpClick;
+    document.getElementById('btn-prompt-editor').onclick = openPromptEditor;
+
+    // Prompt modal
+    document.getElementById('btn-prompt-save').onclick = savePromptOverride;
+    document.getElementById('btn-prompt-cancel').onclick = closePromptModal;
+    document.getElementById('btn-prompt-reset').onclick = resetPrompt;
+    document.getElementById('prompt-modal').onclick = e => { if (e.target === e.currentTarget) closePromptModal(); };
 
     // Guess
     document.getElementById('btn-submit-guess').onclick = submitGuess;
