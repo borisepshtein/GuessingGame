@@ -217,19 +217,20 @@ header::after {
 }
 
 .btn-donate {
-    background: transparent;
-    color: var(--text-dim);
-    border: 1px dashed var(--border);
+    font-family: var(--font-body);
     font-style: italic;
     font-size: 0.85rem;
+    color: var(--text-dim);
     text-decoration: none;
-    display: inline-block;
+    border-bottom: 1px dotted var(--border);
+    padding-bottom: 1px;
+    transition: color 0.2s, border-color 0.2s;
+    letter-spacing: 0.3px;
 }
 
 .btn-donate:hover {
-    border-color: var(--gold);
     color: var(--gold);
-    transform: translateY(-1px);
+    border-bottom-color: var(--gold);
 }
 
 /* ─── Category grid ───────────────────────────────────── */
